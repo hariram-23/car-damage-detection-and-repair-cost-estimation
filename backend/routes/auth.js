@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
-const { sendPasswordResetEmail } = require('../utils/simpleEmailService');
+const { sendOTPEmail } = require('../utils/otpEmailService');
 
 const router = express.Router();
 
@@ -76,7 +76,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Forgot Password - Request Reset
+// Forgot Password - Send OTP
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -85,63 +85,38 @@ router.post('/forgot-password', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       // Don't reveal if user exists or not for security
-      return res.json({ message: 'If an account exists with this email, you will receive password reset instructions.' });
+      return res.json({ message: 'If an account exists with this email, you will receive an OTP.' });
     }
 
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Save token to user (expires in 1 hour)
-    user.resetPasswordToken = resetTokenHash;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    // Save OTP to user (expires in 10 minutes)
+    user.resetPasswordOTP = otp;
+    user.resetPasswordOTPExpires = Date.now() + 600000; // 10 minutes
     await user.save();
 
-    // Determine the base URL (use environment variable or default)
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const resetUrl = `${baseUrl}/reset-password/${resetToken}`;
-    
-    // Send email
+    // Send OTP email
     try {
-      await sendPasswordResetEmail(
-        user.email, 
-        resetUrl, 
-        `${user.firstName} ${user.lastName}`
-      );
-      
-      console.log('\n' + '='.repeat(80));
-      console.log('🔐 PASSWORD RESET REQUEST');
-      console.log('='.repeat(80));
-      console.log(`📧 Email: ${email}`);
-      console.log(`🔗 Reset Link: ${resetUrl}`);
-      console.log(`⏰ Expires: ${new Date(user.resetPasswordExpires).toLocaleString()}`);
-      console.log(`✅ Email sent successfully`);
-      console.log('='.repeat(80) + '\n');
+      await sendOTPEmail(user.email, otp, `${user.firstName} ${user.lastName}`);
       
       res.json({ 
-        message: 'Password reset instructions have been sent to your email.'
+        message: 'OTP has been sent to your email.',
+        success: true
       });
     } catch (emailError) {
       console.error('Email sending failed:', emailError.message);
       
-      // If email fails, still log the reset URL for development
-      console.log('\n' + '='.repeat(80));
-      console.log('⚠️  EMAIL FAILED - DEVELOPMENT FALLBACK');
-      console.log('='.repeat(80));
-      console.log(`📧 Email: ${email}`);
-      console.log(`🔗 Reset Link: ${resetUrl}`);
-      console.log(`⏰ Expires: ${new Date(user.resetPasswordExpires).toLocaleString()}`);
-      console.log('='.repeat(80) + '\n');
-      
-      // In development, return the URL; in production, return generic message
+      // In development, return OTP in response for testing
       if (process.env.NODE_ENV === 'development') {
         res.json({ 
-          message: 'Email service unavailable. Use the reset link from console.',
-          resetUrl: resetUrl // Only for development
+          message: 'Email service unavailable. OTP shown for development.',
+          success: true,
+          otp: otp // Only for development
         });
       } else {
         res.status(500).json({ 
-          error: 'Failed to send reset email. Please try again later or contact support.' 
+          error: 'Failed to send OTP. Please try again later.' 
         });
       }
     }
@@ -150,29 +125,58 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-// Reset Password
-router.post('/reset-password/:token', async (req, res) => {
+// Verify OTP
+router.post('/verify-otp', async (req, res) => {
   try {
-    const { token } = req.params;
-    const { password } = req.body;
+    const { email, otp } = req.body;
 
-    // Hash the token from URL
-    const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex');
-
-    // Find user with valid token
+    // Find user with valid OTP
     const user = await User.findOne({
-      resetPasswordToken: resetTokenHash,
-      resetPasswordExpires: { $gt: Date.now() }
+      email,
+      resetPasswordOTP: otp,
+      resetPasswordOTPExpires: { $gt: Date.now() }
     });
 
     if (!user) {
-      return res.status(400).json({ error: 'Invalid or expired reset token' });
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    console.log('\n' + '='.repeat(80));
+    console.log('✅ OTP VERIFIED SUCCESSFULLY');
+    console.log('='.repeat(80));
+    console.log(`📧 Email: ${email}`);
+    console.log(`👤 User: ${user.firstName} ${user.lastName}`);
+    console.log('='.repeat(80) + '\n');
+
+    res.json({ 
+      message: 'OTP verified successfully',
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reset Password with OTP
+router.post('/reset-password-otp', async (req, res) => {
+  try {
+    const { email, otp, password } = req.body;
+
+    // Find user with valid OTP
+    const user = await User.findOne({
+      email,
+      resetPasswordOTP: otp,
+      resetPasswordOTPExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
 
     // Update password
     user.password = password;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    user.resetPasswordOTP = undefined;
+    user.resetPasswordOTPExpires = undefined;
     await user.save();
 
     console.log('\n' + '='.repeat(80));
