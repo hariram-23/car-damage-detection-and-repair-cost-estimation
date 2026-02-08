@@ -31,10 +31,23 @@ const upload = multer({
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files allowed'));
+      cb(new Error('Please upload the image properly. Only image files are allowed.'));
     }
   }
 });
+
+// Error handler for multer
+const handleMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'Please upload the image properly. Image size should be less than 10MB.' });
+    }
+    return res.status(400).json({ error: 'Please upload the image properly' });
+  } else if (err) {
+    return res.status(400).json({ error: err.message || 'Please upload the image properly' });
+  }
+  next();
+};
 
 // Function to run Python ML prediction
 function runPrediction(imagePath) {
@@ -74,8 +87,13 @@ function runPrediction(imagePath) {
 }
 
 // Analyze Damage
-router.post('/analyze', authMiddleware, upload.single('image'), async (req, res) => {
+router.post('/analyze', authMiddleware, upload.single('image'), handleMulterError, async (req, res) => {
   try {
+    // Validate image upload
+    if (!req.file) {
+      return res.status(400).json({ error: 'Please upload the image properly' });
+    }
+
     const { carCategory } = req.body;
     const imageUrl = `/uploads/${req.file.filename}`;
     const imagePath = path.join(__dirname, '..', 'uploads', req.file.filename);
@@ -123,8 +141,8 @@ router.post('/analyze', authMiddleware, upload.single('image'), async (req, res)
       console.error(mlError);
       console.error('='.repeat(80) + '\n');
       return res.status(503).json({ 
-        error: 'Damage detection service is currently unavailable. Please ensure Python and required packages are installed.',
-        details: mlError.message
+        error: 'Please upload the image properly',
+        details: 'Unable to process the image. Please ensure the image is clear and shows vehicle damage.'
       });
     }
 

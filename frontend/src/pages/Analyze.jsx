@@ -23,6 +23,18 @@ export default function Analyze() {
     
     const file = e.target.files[0]
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload a valid image file (JPG, PNG, etc.)')
+        return
+      }
+      
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('Image size should be less than 10MB. Please upload a smaller image.')
+        return
+      }
+      
       setError('') // Clear any previous errors
       setImage(file)
       setPreview(URL.createObjectURL(file))
@@ -39,7 +51,19 @@ export default function Analyze() {
     }
     
     const file = e.dataTransfer.files[0]
-    if (file && file.type.startsWith('image/')) {
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload a valid image file (JPG, PNG, etc.)')
+        return
+      }
+      
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('Image size should be less than 10MB. Please upload a smaller image.')
+        return
+      }
+      
       setError('') // Clear any previous errors
       setImage(file)
       setPreview(URL.createObjectURL(file))
@@ -78,9 +102,19 @@ export default function Analyze() {
       // Handle specific error messages
       const errorMessage = err.response?.data?.error || err.response?.data?.details || 'Analysis failed'
       
-      // Check if it's a "no damage detected" error
-      if (errorMessage.includes('No damage detected') || errorMessage.includes('no damage')) {
-        setError('No damage detected in the image. Please upload a clear image with visible vehicle damage (dent, scratch, crack, glass shatter, lamp broken, or tire flat).')
+      // Check for image-related errors
+      if (errorMessage.includes('No damage detected') || 
+          errorMessage.includes('no damage') ||
+          errorMessage.includes('Failed to load image') ||
+          errorMessage.includes('image') ||
+          errorMessage.includes('file') ||
+          errorMessage.includes('upload') ||
+          errorMessage.includes('Python') ||
+          errorMessage.includes('ML') ||
+          errorMessage.includes('prediction') ||
+          errorMessage.includes('detection service') ||
+          errorMessage.includes('unavailable')) {
+        setError('Please upload the image properly. Ensure the image is clear and shows visible vehicle damage.')
       } else {
         setError(errorMessage)
       }
