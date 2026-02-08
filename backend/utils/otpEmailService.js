@@ -9,7 +9,7 @@ async function sendOTPEmail(email, otp, userName) {
     if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
       const cleanPassword = process.env.EMAIL_PASSWORD.replace(/\s/g, '');
       
-      transporter = nodemailer.createTransporter({
+      transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: process.env.EMAIL_USER,
