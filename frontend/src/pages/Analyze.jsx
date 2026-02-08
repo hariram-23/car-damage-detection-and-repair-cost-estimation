@@ -102,10 +102,12 @@ export default function Analyze() {
       // Handle specific error messages
       const errorMessage = err.response?.data?.error || err.response?.data?.details || 'Analysis failed'
       
-      // Check for image-related errors
-      if (errorMessage.includes('No damage detected') || 
-          errorMessage.includes('no damage') ||
-          errorMessage.includes('Failed to load image') ||
+      // Check for "no damage" errors
+      if (errorMessage.toLowerCase().includes('no damage')) {
+        setError('Please upload the image properly or your vehicle has no damage. Ensure the image shows visible vehicle damage (dent, scratch, crack, glass shatter, lamp broken, or tire flat).')
+      }
+      // Check for other image-related errors
+      else if (errorMessage.includes('Failed to load image') ||
           errorMessage.includes('image') ||
           errorMessage.includes('file') ||
           errorMessage.includes('upload') ||
@@ -114,7 +116,7 @@ export default function Analyze() {
           errorMessage.includes('prediction') ||
           errorMessage.includes('detection service') ||
           errorMessage.includes('unavailable')) {
-        setError('Please upload the image properly. Ensure the image is clear and shows visible vehicle damage.')
+        setError('Please upload the image properly. Ensure the image is clear and in JPG or PNG format.')
       } else {
         setError(errorMessage)
       }
