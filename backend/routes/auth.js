@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const { sendPasswordResetEmail } = require('../utils/emailService');
 
 const router = express.Router();
 
@@ -96,23 +97,54 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // In a real application, you would send an email here
-    // For now, we'll just log the reset link
-    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
-    console.log('\n' + '='.repeat(80));
-    console.log('🔐 PASSWORD RESET REQUEST');
-    console.log('='.repeat(80));
-    console.log(`📧 Email: ${email}`);
-    console.log(`🔗 Reset Link: ${resetUrl}`);
-    console.log(`⏰ Expires: ${new Date(user.resetPasswordExpires).toLocaleString()}`);
-    console.log('='.repeat(80) + '\n');
-
-    res.json({ 
-      message: 'If an account exists with this email, you will receive password reset instructions.',
-      // For development only - remove in production
-      resetToken: resetToken,
-      resetUrl: resetUrl
-    });
+    // Determine the base URL (use environment variable or default)
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${baseUrl}/reset-password/${resetToken}`;
+    
+    // Send email
+    try {
+      await sendPasswordResetEmail(
+        user.email, 
+        resetUrl, 
+        `${user.firstName} ${user.lastName}`
+      );
+      
+      console.log('\n' + '='.repeat(80));
+      console.log('🔐 PASSWORD RESET REQUEST');
+      console.log('='.repeat(80));
+      console.log(`📧 Email: ${email}`);
+      console.log(`🔗 Reset Link: ${resetUrl}`);
+      console.log(`⏰ Expires: ${new Date(user.resetPasswordExpires).toLocaleString()}`);
+      console.log(`✅ Email sent successfully`);
+      console.log('='.repeat(80) + '\n');
+      
+      res.json({ 
+        message: 'Password reset instructions have been sent to your email.'
+      });
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError.message);
+      
+      // If email fails, still log the reset URL for development
+      console.log('\n' + '='.repeat(80));
+      console.log('⚠️  EMAIL FAILED - DEVELOPMENT FALLBACK');
+      console.log('='.repeat(80));
+      console.log(`📧 Email: ${email}`);
+      console.log(`🔗 Reset Link: ${resetUrl}`);
+      console.log(`⏰ Expires: ${new Date(user.resetPasswordExpires).toLocaleString()}`);
+      console.log('='.repeat(80) + '\n');
+      
+      // In development, return the URL; in production, return generic message
+      if (process.env.NODE_ENV === 'development') {
+        res.json({ 
+          message: 'Email service unavailable. Use the reset link from console.',
+          resetUrl: resetUrl // Only for development
+        });
+      } else {
+        res.status(500).json({ 
+          error: 'Failed to send reset email. Please try again later or contact support.' 
+        });
+      }
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
