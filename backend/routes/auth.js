@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
-const { sendPasswordResetEmail } = require('../utils/emailService');
+const { sendPasswordResetEmail } = require('../utils/simpleEmailService');
 
 const router = express.Router();
 
