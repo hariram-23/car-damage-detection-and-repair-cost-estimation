@@ -51,9 +51,6 @@ export default function Landing() {
             <button onClick={() => navigate('/signup')} className="px-8 py-4 cyber-button rounded-lg font-semibold text-lg">
               Start Analysis →
             </button>
-            <button className="px-8 py-4 border-2 border-primary/30 rounded-lg hover:border-primary transition">
-              Watch Demo
-            </button>
           </div>
         </motion.div>
 
