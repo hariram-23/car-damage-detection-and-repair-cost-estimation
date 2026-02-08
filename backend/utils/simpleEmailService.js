@@ -27,6 +27,9 @@ async function sendPasswordResetEmail(email, resetUrl, userName) {
     if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
       const cleanPassword = process.env.EMAIL_PASSWORD.replace(/\s/g, '');
       
+      console.log('\n🔌 Attempting to connect to Gmail...');
+      console.log(`📧 Email: ${process.env.EMAIL_USER}`);
+      
       transporter = nodemailer.createTransporter({
         service: 'gmail',
         auth: {
@@ -38,12 +41,23 @@ async function sendPasswordResetEmail(email, resetUrl, userName) {
       // Test the connection
       try {
         await transporter.verify();
-        console.log('✅ Using Gmail:', process.env.EMAIL_USER);
+        console.log('✅ Gmail connection successful!');
+        console.log('📤 Sending email to:', email);
       } catch (verifyError) {
-        console.warn('⚠️  Gmail authentication failed:', verifyError.message);
+        console.error('❌ Gmail authentication failed:', verifyError.message);
+        console.error('\n💡 To fix this:');
+        console.error('1. Go to: https://myaccount.google.com/apppasswords');
+        console.error('2. Generate a new App Password');
+        console.error('3. Update EMAIL_USER and EMAIL_PASSWORD in backend/.env');
+        console.error('4. Remove ALL spaces from the password');
+        console.error('5. Restart the server\n');
         console.log('📧 Falling back to test email service...');
         transporter = null;
       }
+    } else {
+      console.warn('\n⚠️  Gmail credentials not configured in .env file');
+      console.warn('📝 Please update EMAIL_USER and EMAIL_PASSWORD in backend/.env');
+      console.warn('📖 See SETUP_GMAIL_NOW.md for instructions\n');
     }
 
     // If Gmail doesn't work, use Ethereal test account
