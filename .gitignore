@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+venv/
+env/
+
+# Environment
+.env
+.env.local
+
+# Build
+dist/
+build/
+*.log
+
+# Uploads
+uploads/
+*.jpg
+*.png
+*.jpeg
+
+# ML Models
+*.pt
+*.onnx
+runs/
+dataset/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
