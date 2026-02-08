@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { motion } from 'framer-motion'
+import axios from 'axios'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -9,6 +10,10 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetMessage, setResetMessage] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -27,12 +32,93 @@ export default function Login() {
     }
   }
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    setResetMessage('')
+    setResetLoading(true)
+
+    try {
+      await axios.post('/api/auth/forgot-password', { email: resetEmail })
+      setResetMessage('Password reset instructions have been sent to your email. Please check your inbox.')
+      setTimeout(() => {
+        setShowForgotPassword(false)
+        setResetEmail('')
+        setResetMessage('')
+      }, 3000)
+    } catch (err) {
+      setResetMessage(err.response?.data?.error || 'Failed to send reset email. Please try again.')
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-dark flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-20 w-96 h-96 bg-primary rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="cyber-border rounded-2xl p-8 bg-dark max-w-md w-full mx-4"
+          >
+            <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
+            <p className="text-gray-400 mb-6">
+              Enter your email address and we'll send you instructions to reset your password.
+            </p>
+
+            {resetMessage && (
+              <div className={`rounded-lg p-3 mb-4 text-sm ${
+                resetMessage.includes('sent') 
+                  ? 'bg-green-500/20 border border-green-500 text-green-400'
+                  : 'bg-red-500/20 border border-red-500 text-red-400'
+              }`}>
+                {resetMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-2">Email Address</label>
+                <input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="john@example.com"
+                  className="w-full px-4 py-3 bg-dark-light border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false)
+                    setResetEmail('')
+                    setResetMessage('')
+                  }}
+                  className="flex-1 px-6 py-3 border-2 border-gray-700 rounded-lg hover:border-gray-500 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="flex-1 px-6 py-3 cyber-button rounded-lg font-semibold disabled:opacity-50"
+                >
+                  {resetLoading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -79,7 +165,13 @@ export default function Login() {
             <div>
               <div className="flex justify-between mb-2">
                 <label className="text-sm">Password</label>
-                <a href="#" className="text-sm text-primary hover:underline">Forgot password?</a>
+                <button 
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
               </div>
               <div className="relative">
                 <input

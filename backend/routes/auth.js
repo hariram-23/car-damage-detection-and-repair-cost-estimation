@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 
 const router = express.Router();
@@ -69,6 +70,87 @@ router.post('/login', async (req, res) => {
         isPremium: user.isPremium
       }
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Forgot Password - Request Reset
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return res.json({ message: 'If an account exists with this email, you will receive password reset instructions.' });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    
+    // Save token to user (expires in 1 hour)
+    user.resetPasswordToken = resetTokenHash;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    // In a real application, you would send an email here
+    // For now, we'll just log the reset link
+    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+    console.log('\n' + '='.repeat(80));
+    console.log('🔐 PASSWORD RESET REQUEST');
+    console.log('='.repeat(80));
+    console.log(`📧 Email: ${email}`);
+    console.log(`🔗 Reset Link: ${resetUrl}`);
+    console.log(`⏰ Expires: ${new Date(user.resetPasswordExpires).toLocaleString()}`);
+    console.log('='.repeat(80) + '\n');
+
+    res.json({ 
+      message: 'If an account exists with this email, you will receive password reset instructions.',
+      // For development only - remove in production
+      resetToken: resetToken,
+      resetUrl: resetUrl
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reset Password
+router.post('/reset-password/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    // Hash the token from URL
+    const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find user with valid token
+    const user = await User.findOne({
+      resetPasswordToken: resetTokenHash,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    // Update password
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    console.log('\n' + '='.repeat(80));
+    console.log('✅ PASSWORD RESET SUCCESSFUL');
+    console.log('='.repeat(80));
+    console.log(`📧 Email: ${user.email}`);
+    console.log(`👤 User: ${user.firstName} ${user.lastName}`);
+    console.log('='.repeat(80) + '\n');
+
+    res.json({ message: 'Password reset successful. You can now login with your new password.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

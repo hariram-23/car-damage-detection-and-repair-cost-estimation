@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Analyze from './pages/Analyze'
 import Report from './pages/Report'
 import History from './pages/History'
+import ResetPassword from './pages/ResetPassword'
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth()
@@ -21,6 +22,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/analyze" element={<ProtectedRoute><Analyze /></ProtectedRoute>} />
           <Route path="/report/:reportId" element={<ProtectedRoute><Report /></ProtectedRoute>} />
