@@ -30,9 +30,24 @@ function calculateEstimatedCost(damageType, severity, carCategory) {
       'Severe': { 'Economy': [6000, 12000], 'Medium': [10000, 18000], 'Premium': [15000, 30000], 'Luxury': [25000, 40000] }
     },
     'tire flat': {
-      'Minor': { 'Economy': [1500, 3000], 'Medium': [2500, 5000], 'Premium': [4000, 8000], 'Luxury': [6000, 12000] },
-      'Moderate': { 'Economy': [3000, 6000], 'Medium': [5000, 10000], 'Premium': [8000, 15000], 'Luxury': [12000, 22000] },
-      'Severe': { 'Economy': [6000, 10000], 'Medium': [10000, 18000], 'Premium': [15000, 25000], 'Luxury': [22000, 40000] }
+      'Minor': { // Simple puncture, slow leak, nail removal
+        'Economy': [200, 500],
+        'Medium': [300, 700],
+        'Premium': [500, 1200],
+        'Luxury': [800, 2000]
+      },
+      'Moderate': { // Multiple punctures, sidewall patch, valve issue
+        'Economy': [500, 1500],
+        'Medium': [800, 2500],
+        'Premium': [1500, 4000],
+        'Luxury': [3000, 8000]
+      },
+      'Severe': { // Tyre replacement required
+        'Economy': [2500, 4500],
+        'Medium': [4000, 7000],
+        'Premium': [8000, 15000],
+        'Luxury': [15000, 40000]
+      }
     }
   };
   
