@@ -141,6 +141,10 @@ router.post('/analyze', authMiddleware, upload.single('image'), async (req, res)
     console.log(`📊 Based on: ${damageResult.severity} severity + ${carCategory || 'Medium'} category`);
     console.log('-'.repeat(80));
 
+    // Determine if analysis needs review based on confidence
+    const needsReview = damageResult.confidence < 70;
+    const status = needsReview ? 'pending' : 'pending';
+
     // Create analysis record
     const analysis = new Analysis({
       userId: req.userId,
@@ -156,7 +160,9 @@ router.post('/analyze', authMiddleware, upload.single('image'), async (req, res)
       },
       detections: damageResult.detections,
       totalDetections: damageResult.totalDetections,
-      estimatedCost
+      estimatedCost,
+      status,
+      needsReview
     });
 
     await analysis.save();

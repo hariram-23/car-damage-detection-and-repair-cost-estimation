@@ -123,6 +123,7 @@ export default function Report() {
   const navigate = useNavigate()
   const [analysis, setAnalysis] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [statusUpdating, setStatusUpdating] = useState(false)
 
   useEffect(() => {
     console.log('Report ID:', reportId)
@@ -160,6 +161,38 @@ export default function Report() {
       link.remove()
     } catch (error) {
       console.error('Failed to download PDF:', error)
+    }
+  }
+
+  const updateStatus = async (newStatus) => {
+    try {
+      setStatusUpdating(true)
+      const cleanReportId = reportId.startsWith('%23') ? reportId.substring(3) : reportId.replace('#', '')
+      await axios.patch(`/api/dashboard/${cleanReportId}/status`, {
+        status: newStatus,
+        needsReview: false
+      })
+      setAnalysis({ ...analysis, status: newStatus, needsReview: false })
+    } catch (error) {
+      console.error('Failed to update status:', error)
+    } finally {
+      setStatusUpdating(false)
+    }
+  }
+
+  const toggleNeedsReview = async () => {
+    try {
+      setStatusUpdating(true)
+      const cleanReportId = reportId.startsWith('%23') ? reportId.substring(3) : reportId.replace('#', '')
+      const newNeedsReview = !analysis.needsReview
+      await axios.patch(`/api/dashboard/${cleanReportId}/status`, {
+        needsReview: newNeedsReview
+      })
+      setAnalysis({ ...analysis, needsReview: newNeedsReview })
+    } catch (error) {
+      console.error('Failed to toggle review flag:', error)
+    } finally {
+      setStatusUpdating(false)
     }
   }
 
@@ -208,6 +241,25 @@ export default function Report() {
             <div>
               <h1 className="text-4xl font-bold mb-2">ANALYSIS REPORT</h1>
               <p className="text-gray-400">ID: {analysis.reportId}</p>
+              <div className="flex items-center gap-3 mt-3">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  analysis.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                  analysis.status === 'reviewed' ? 'bg-blue-500/20 text-blue-400' :
+                  'bg-yellow-500/20 text-yellow-400'
+                }`}>
+                  {analysis.status?.toUpperCase() || 'PENDING'}
+                </span>
+                {analysis.needsReview && (
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">
+                    NEEDS REVIEW
+                  </span>
+                )}
+                {analysis.damageDetection.confidence < 70 && (
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/20 text-orange-400">
+                    LOW CONFIDENCE
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex gap-3">
               <button
@@ -222,6 +274,59 @@ export default function Report() {
               >
                 <Download size={20} /> Download PDF
               </button>
+            </div>
+          </div>
+
+          {/* Status Management */}
+          <div className="cyber-border rounded-xl p-6 bg-dark-light/30 mb-8">
+            <h3 className="text-lg font-bold mb-4">Review Status</h3>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => updateStatus('pending')}
+                disabled={statusUpdating}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  analysis.status === 'pending'
+                    ? 'bg-yellow-500/20 text-yellow-400 border-2 border-yellow-400'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Pending
+              </button>
+              <button
+                onClick={() => updateStatus('reviewed')}
+                disabled={statusUpdating}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  analysis.status === 'reviewed'
+                    ? 'bg-blue-500/20 text-blue-400 border-2 border-blue-400'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Reviewed
+              </button>
+              <button
+                onClick={() => updateStatus('completed')}
+                disabled={statusUpdating}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  analysis.status === 'completed'
+                    ? 'bg-green-500/20 text-green-400 border-2 border-green-400'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Completed
+              </button>
+              <div className="ml-auto">
+                <button
+                  onClick={toggleNeedsReview}
+                  disabled={statusUpdating}
+                  className={`px-4 py-2 rounded-lg font-semibold transition ${
+                    analysis.needsReview
+                      ? 'bg-red-500/20 text-red-400 border-2 border-red-400'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  {analysis.needsReview ? '⚠️ Needs Review' : 'Flag for Review'}
+                </button>
+              </div>
             </div>
           </div>
 

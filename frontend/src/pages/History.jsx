@@ -185,8 +185,24 @@ export default function History() {
                     <div className="md:col-span-3">
                       <div className="text-sm text-gray-400 mb-1">Damage Type</div>
                       <div className="font-bold mb-2">{analysis.damageType}</div>
-                      <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getSeverityColor(analysis.severity)}`}>
-                        {analysis.severity || 'Unknown'}
+                      <div className="flex flex-wrap gap-2">
+                        <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getSeverityColor(analysis.severity)}`}>
+                          {analysis.severity || 'Unknown'}
+                        </div>
+                        {analysis.status && (
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            analysis.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                            analysis.status === 'reviewed' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {analysis.status.toUpperCase()}
+                          </span>
+                        )}
+                        {analysis.needsReview && (
+                          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">
+                            ⚠️
+                          </span>
+                        )}
                       </div>
                     </div>
 

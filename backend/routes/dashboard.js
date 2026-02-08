@@ -50,9 +50,17 @@ router.get('/stats', authMiddleware, async (req, res) => {
       ? (analyses.reduce((sum, a) => sum + a.damageDetection.confidence, 0) / analyses.length).toFixed(1)
       : 0;
 
+    // Enhanced pending reviews logic:
+    // 1. Status is 'pending'
+    // 2. OR needsReview flag is true
+    // 3. OR confidence is below 70%
+    // 4. OR created within last 7 days and not reviewed
     const pendingReviews = analyses.filter(a => {
       const daysSince = (Date.now() - a.createdAt) / (1000 * 60 * 60 * 24);
-      return daysSince < 7;
+      const lowConfidence = a.damageDetection.confidence < 70;
+      const recentAndUnreviewed = daysSince < 7 && a.status === 'pending';
+      
+      return a.status === 'pending' || a.needsReview || lowConfidence || recentAndUnreviewed;
     }).length;
 
     // Recent analyses
@@ -68,7 +76,10 @@ router.get('/stats', authMiddleware, async (req, res) => {
         severity: a.damageDetection.severity,
         cost: a.estimatedCost,
         date: a.createdAt,
-        imageUrl: a.imageUrl
+        imageUrl: a.imageUrl,
+        status: a.status,
+        needsReview: a.needsReview,
+        confidence: a.damageDetection.confidence
       }));
 
     // Cost trends (last 7 days)
@@ -113,6 +124,53 @@ router.get('/history', authMiddleware, async (req, res) => {
       .limit(50);
 
     res.json({ analyses });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update analysis status
+router.patch('/:reportId/status', authMiddleware, async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const { status, needsReview, reviewNotes } = req.body;
+
+    const analysis = await Analysis.findOne({ reportId, userId: req.userId });
+    
+    if (!analysis) {
+      return res.status(404).json({ error: 'Analysis not found' });
+    }
+
+    if (status) analysis.status = status;
+    if (typeof needsReview === 'boolean') analysis.needsReview = needsReview;
+    if (reviewNotes !== undefined) analysis.reviewNotes = reviewNotes;
+    
+    if (status === 'reviewed' || status === 'completed') {
+      analysis.reviewedAt = new Date();
+    }
+
+    await analysis.save();
+
+    res.json({ message: 'Status updated successfully', analysis });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get pending reviews
+router.get('/pending-reviews', authMiddleware, async (req, res) => {
+  try {
+    const analyses = await Analysis.find({ userId: req.userId });
+    
+    const pendingAnalyses = analyses.filter(a => {
+      const daysSince = (Date.now() - a.createdAt) / (1000 * 60 * 60 * 24);
+      const lowConfidence = a.damageDetection.confidence < 70;
+      const recentAndUnreviewed = daysSince < 7 && a.status === 'pending';
+      
+      return a.status === 'pending' || a.needsReview || lowConfidence || recentAndUnreviewed;
+    }).sort((a, b) => b.createdAt - a.createdAt);
+
+    res.json({ analyses: pendingAnalyses });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

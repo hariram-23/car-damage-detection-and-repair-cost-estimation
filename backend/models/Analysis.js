@@ -58,6 +58,21 @@ const analysisSchema = new mongoose.Schema({
   modelVersion: {
     type: String
   },
+  status: {
+    type: String,
+    enum: ['pending', 'reviewed', 'completed'],
+    default: 'pending'
+  },
+  needsReview: {
+    type: Boolean,
+    default: false
+  },
+  reviewNotes: {
+    type: String
+  },
+  reviewedAt: {
+    type: Date
+  },
   createdAt: {
     type: Date,
     default: Date.now
