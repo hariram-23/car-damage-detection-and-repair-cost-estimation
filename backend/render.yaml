@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ai-damage-detection-backend
+    name: ai-damage-backend
     env: node
     region: oregon
     plan: free
@@ -14,7 +14,7 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
-        generateValue: true
+        sync: false
       - key: EMAIL_USER
         sync: false
       - key: EMAIL_PASSWORD

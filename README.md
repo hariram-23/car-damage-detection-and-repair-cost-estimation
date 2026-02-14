@@ -2,14 +2,6 @@
 
 Web application for vehicle damage detection and cost estimation with cyber-themed UI.
 
-## 🚀 Ready to Deploy?
-
-**Start here**: [START_HERE.md](START_HERE.md) - Choose your deployment path
-
-**Quick Deploy** (15 min): [DEPLOY_NOW.md](DEPLOY_NOW.md)
-
-**Full Guide** (30 min): [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-
 ## 🚀 Quick Start
 
 ### 1. Install Dependencies
