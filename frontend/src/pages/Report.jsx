@@ -88,7 +88,8 @@ function ImageWithBoundingBoxes({ imageUrl, detections }) {
   }
 
   // Construct full image URL
-  const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `http://localhost:5000${imageUrl}`
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+  const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${API_URL}${imageUrl}`
 
   return (
     <div ref={containerRef} className="relative w-full">

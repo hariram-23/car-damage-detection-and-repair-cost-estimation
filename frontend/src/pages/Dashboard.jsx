@@ -6,6 +6,8 @@ import { motion } from 'framer-motion'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { TrendingUp, IndianRupee, CheckCircle, Clock, Plus, LogOut } from 'lucide-react'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 export default function Dashboard() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -253,7 +255,7 @@ export default function Dashboard() {
                   <div className="w-12 h-12 bg-gray-200 rounded overflow-hidden flex-shrink-0">
                     {analysis.imageUrl ? (
                       <img 
-                        src={`http://localhost:5000${analysis.imageUrl}`} 
+                        src={`${API_URL}${analysis.imageUrl}`} 
                         alt="Vehicle damage" 
                         className="w-full h-full object-cover"
                         onError={(e) => {

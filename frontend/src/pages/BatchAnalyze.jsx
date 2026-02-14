@@ -4,6 +4,8 @@ import axios from 'axios'
 import { motion } from 'framer-motion'
 import { Upload, X, ArrowLeft, CheckCircle, AlertCircle, Loader, HelpCircle } from 'lucide-react'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 // Tooltip component for explanations
 function InfoTooltip({ text }) {
   const [show, setShow] = useState(false)
@@ -419,7 +421,7 @@ export default function BatchAnalyze() {
                         {/* Image */}
                         <div className="relative h-48 bg-white/80">
                           <img 
-                            src={`http://localhost:5000${result.data.imageUrl}`}
+                            src={`${API_URL}${result.data.imageUrl}`}
                             alt={`Analysis ${index + 1}`}
                             className="w-full h-full object-cover"
                             onError={(e) => {

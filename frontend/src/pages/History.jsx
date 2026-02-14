@@ -5,6 +5,8 @@ import axios from 'axios'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Search, Filter, Calendar, Download } from 'lucide-react'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 export default function History() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -153,7 +155,7 @@ export default function History() {
                       <div className="w-full h-24 bg-gray-200 rounded-lg overflow-hidden">
                         {analysis.imageUrl ? (
                           <img
-                            src={`http://localhost:5000${analysis.imageUrl}`}
+                            src={`${API_URL}${analysis.imageUrl}`}
                             alt="Vehicle damage"
                             className="w-full h-full object-cover"
                             onError={(e) => {
