@@ -1,9 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import axios from 'axios'
 
-// Configure axios base URL
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-
 const AuthContext = createContext()
 
 export const useAuth = () => useContext(AuthContext)
@@ -23,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = async (email, password) => {
-    const res = await axios.post('/auth/login', { email, password })
+    const res = await axios.post('/api/auth/login', { email, password })
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('user', JSON.stringify(res.data.user))
     axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`
@@ -32,7 +29,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const signup = async (data) => {
-    const res = await axios.post('/auth/signup', data)
+    const res = await axios.post('/api/auth/signup', data)
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('user', JSON.stringify(res.data.user))
     axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`
@@ -53,3 +50,6 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   )
 }
+
+
+

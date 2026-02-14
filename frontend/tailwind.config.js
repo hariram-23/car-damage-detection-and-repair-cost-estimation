@@ -7,12 +7,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#00d9ff',
-        dark: '#0a0e27',
-        'dark-light': '#1a1f3a'
+        primary: '#16A34A',
+        secondary: '#84CC16',
+        accent: '#FDE047',
+        olive: '#65A30D',
+        dark: '#1F2937',
+        'dark-light': '#374151',
+        'light-bg': '#F5F9F3'
       },
       fontFamily: {
-        'orbitron': ['Orbitron', 'sans-serif']
+        'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'display': ['Poppins', 'Inter', 'sans-serif']
       }
     },
   },

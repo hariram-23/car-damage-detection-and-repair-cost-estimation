@@ -11,6 +11,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://172.16.25.103:5173', // Allow mobile access
   process.env.FRONTEND_URL
 ].filter(Boolean);
 

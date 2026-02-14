@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { motion } from 'framer-motion'
-import { Upload, X, ArrowLeft } from 'lucide-react'
+import { Upload, X, ArrowLeft, Camera } from 'lucide-react'
 
 export default function Analyze() {
   const navigate = useNavigate()
@@ -13,9 +13,9 @@ export default function Analyze() {
   const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const mobileFileInputRef = useRef(null)
 
   const handleImageChange = (e) => {
-    // Check if car category is selected first
     if (!formData.carCategory) {
       setError('Please select a car category first')
       return
@@ -23,63 +23,41 @@ export default function Analyze() {
     
     const file = e.target.files[0]
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setError('Please upload a valid image file (JPG, PNG, etc.)')
         return
       }
       
-      // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         setError('Image size should be less than 10MB. Please upload a smaller image.')
         return
       }
       
-      setError('') // Clear any previous errors
+      setError('')
       setImage(file)
       setPreview(URL.createObjectURL(file))
     }
   }
 
-  const handleDrop = (e) => {
-    e.preventDefault()
-    
-    // Check if car category is selected first
+  const handleMobileCameraClick = () => {
     if (!formData.carCategory) {
       setError('Please select a car category first')
       return
     }
     
-    const file = e.dataTransfer.files[0]
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please upload a valid image file (JPG, PNG, etc.)')
-        return
-      }
-      
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setError('Image size should be less than 10MB. Please upload a smaller image.')
-        return
-      }
-      
-      setError('') // Clear any previous errors
-      setImage(file)
-      setPreview(URL.createObjectURL(file))
+    if (mobileFileInputRef.current) {
+      mobileFileInputRef.current.click()
     }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    // Validate car category
     if (!formData.carCategory) {
       setError('Please select a car category')
       return
     }
     
-    // Validate image
     if (!image) {
       setError('Please upload an image')
       return
@@ -97,144 +75,165 @@ export default function Analyze() {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
 
-      navigate(`/report/${res.data.analysis.reportId}`)
+      navigate(`/report/${res.data.analysis.reportId}`, { 
+        state: { from: '/analyze' } 
+      })
     } catch (err) {
-      // Show a single unified error message for all image/damage detection issues
-      setError('Please upload the image properly or your vehicle has no damage')
+      const errorMessage = err.response?.data?.error || err.message || 'An error occurred';
+      
+      if (errorMessage.includes('No vehicle detected') || errorMessage.includes('Please upload a car image')) {
+        setError('Please upload a car image. No vehicle detected in the uploaded image.');
+      } else if (errorMessage.includes('No damage detected')) {
+        setError('No damage detected in the image. Please upload an image with visible vehicle damage.');
+      } else {
+        setError('Please upload the image properly or your vehicle has no damage');
+      }
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-dark">
+    <div className="min-h-screen bg-light-bg w-full overflow-x-hidden">
       {/* Header */}
-      <nav className="border-b border-gray-800 px-8 py-4">
-        <div className="flex items-center gap-4">
+      <nav className="border-b border-primary/20 px-4 py-3 bg-white/90">
+        <div className="flex items-center gap-3 max-w-7xl mx-auto">
           <button onClick={() => navigate('/dashboard')} className="p-2 hover:text-primary transition">
-            <ArrowLeft size={24} />
+            <ArrowLeft size={20} />
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded flex items-center justify-center font-bold">AI</div>
-            <span className="text-2xl font-bold">DAMAGESYS</span>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center font-bold text-sm text-white">AI</div>
+            <span className="text-lg font-display font-bold">DAMAGESYS</span>
           </div>
         </div>
       </nav>
 
-      <div className="container mx-auto px-8 py-12">
+      <div className="w-full px-4 py-6 max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-5xl mx-auto"
         >
-          <h1 className="text-4xl font-bold mb-2">ANALYZE DAMAGE</h1>
-          <p className="text-gray-400 mb-8">Upload an image of your vehicle to detect damage and estimate costs</p>
+          <h1 className="text-2xl font-display font-extrabold mb-2">ANALYZE DAMAGE</h1>
+          <p className="text-sm text-gray-700 mb-6">Upload an image of your vehicle to detect damage</p>
 
           {error && (
-            <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6 text-red-400">
+            <div className="bg-red-500/20 border border-red-500 rounded-lg p-3 mb-4 text-red-400 text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Vehicle Details */}
-            <div className="cyber-border rounded-xl p-6 bg-dark-light/30">
-              <h2 className="text-xl font-bold mb-6">Vehicle Details</h2>
-              <p className="text-sm text-gray-400 mb-6">Select your car category for accurate cost estimation</p>
+            <div className="nature-border rounded-xl p-4 bg-white">
+              <h2 className="text-lg font-display font-bold mb-4">Vehicle Details</h2>
+              <p className="text-xs text-gray-700 mb-4">Select your car category</p>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm mb-2">Car Category</label>
-                  <select
-                    value={formData.carCategory}
-                    onChange={(e) => setFormData({ ...formData, carCategory: e.target.value })}
-                    className="w-full px-4 py-3 bg-dark border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition"
-                  >
-                    <option value="">Select Category</option>
-                    <option value="Economy">Economy (Budget-friendly vehicles)</option>
-                    <option value="Medium">Medium (Mid-range vehicles)</option>
-                    <option value="Premium">Premium (Higher-end vehicles)</option>
-                    <option value="Luxury">Luxury (Luxury vehicles)</option>
-                  </select>
-                </div>
-
-                <div className="bg-dark-light/50 rounded-lg p-4 mt-4">
-                  <h3 className="text-sm font-semibold mb-2">Category Guide:</h3>
-                  <div className="text-xs text-gray-400 space-y-1">
-                    <div><span className="text-primary">Economy:</span> Budget-friendly vehicles</div>
-                    <div><span className="text-primary">Medium:</span> Mid-range vehicles</div>
-                    <div><span className="text-primary">Premium:</span> Higher-end vehicles</div>
-                    <div><span className="text-primary">Luxury:</span> Luxury vehicles</div>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-sm mb-2 font-semibold">Car Category</label>
+                <select
+                  value={formData.carCategory}
+                  onChange={(e) => setFormData({ ...formData, carCategory: e.target.value })}
+                  className="w-full px-3 py-3 text-base bg-light-bg border-2 border-gray-300 rounded-lg focus:border-primary outline-none"
+                >
+                  <option value="">Select Category</option>
+                  <option value="Economy">Economy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Premium">Premium</option>
+                  <option value="Luxury">Luxury</option>
+                </select>
               </div>
             </div>
 
             {/* Image Upload */}
-            <div className="cyber-border rounded-xl p-6 bg-dark-light/30">
+            <div className="nature-border rounded-xl p-4 bg-white">
               {!formData.carCategory && (
                 <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-3 mb-4 text-yellow-400 text-sm">
-                  ⚠️ Please select a car category first before uploading an image
+                  ⚠️ Select a car category first
                 </div>
               )}
               
-              <div
-                onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition ${
-                  formData.carCategory 
-                    ? 'border-gray-700 hover:border-primary cursor-pointer' 
-                    : 'border-gray-800 opacity-50 cursor-not-allowed'
-                }`}
-              >
+              <div className={`border-2 border-dashed rounded-xl p-6 text-center ${
+                formData.carCategory ? 'border-gray-300' : 'border-primary/20 opacity-50'
+              }`}>
                 {preview ? (
                   <div className="relative">
-                    <img src={preview} alt="Preview" className="w-full h-64 object-cover rounded-lg" />
+                    <img src={preview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
                     <button
                       type="button"
                       onClick={() => { setImage(null); setPreview(null); }}
-                      className="absolute top-2 right-2 p-2 bg-red-500 rounded-full hover:bg-red-600 transition"
+                      className="absolute top-2 right-2 p-2 bg-red-500 rounded-full hover:bg-red-600"
                     >
-                      <X size={20} />
+                      <X size={16} className="text-white" />
                     </button>
                   </div>
                 ) : (
-                  <label className={`block ${formData.carCategory ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                  <div>
+                    <label className={`block ${formData.carCategory ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        disabled={!formData.carCategory}
+                        className="hidden"
+                      />
+                      <div className="flex flex-col items-center">
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 ${
+                          formData.carCategory ? 'bg-primary/20' : 'bg-gray-200/20'
+                        }`}>
+                          <Upload className={formData.carCategory ? 'text-primary' : 'text-gray-600'} size={24} />
+                        </div>
+                        <h3 className="text-base font-display font-bold mb-2">UPLOAD IMAGE</h3>
+                        <p className="text-xs text-gray-700 mb-3">
+                          {formData.carCategory ? 'Tap to browse files' : 'Select category first'}
+                        </p>
+                        <div className={`px-5 py-2 text-sm border-2 rounded-lg ${
+                          formData.carCategory ? 'border-gray-300' : 'border-primary/20 opacity-50'
+                        }`}>
+                          Browse Files
+                        </div>
+                      </div>
+                    </label>
+                    
+                    <div className="my-4 flex items-center">
+                      <div className="flex-1 h-px bg-gray-300"></div>
+                      <span className="px-3 text-xs text-gray-600">OR</span>
+                      <div className="flex-1 h-px bg-gray-300"></div>
+                    </div>
+                    
                     <input
+                      ref={mobileFileInputRef}
                       type="file"
                       accept="image/*"
+                      capture="environment"
                       onChange={handleImageChange}
-                      disabled={!formData.carCategory}
                       className="hidden"
                     />
-                    <div className="flex flex-col items-center">
-                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
-                        formData.carCategory ? 'bg-primary/20' : 'bg-gray-700/20'
-                      }`}>
-                        <Upload className={formData.carCategory ? 'text-primary' : 'text-gray-600'} size={32} />
-                      </div>
-                      <h3 className="text-xl font-bold mb-2">DRAG & DROP IMAGE</h3>
-                      <p className="text-gray-400 mb-4">
-                        {formData.carCategory 
-                          ? 'Or click to browse from your computer. Supports JPG and PNG' 
-                          : 'Select a car category first to enable upload'}
-                      </p>
-                      <div className={`px-6 py-3 border-2 rounded-lg transition ${
+                    
+                    <button
+                      type="button"
+                      onClick={handleMobileCameraClick}
+                      disabled={!formData.carCategory}
+                      className={`w-full px-5 py-3 text-base rounded-lg font-semibold flex items-center justify-center gap-2 ${
                         formData.carCategory 
-                          ? 'border-gray-700 hover:border-primary' 
-                          : 'border-gray-800 opacity-50'
-                      }`}>
-                        Browse Files
-                      </div>
-                    </div>
-                  </label>
+                          ? 'bg-secondary hover:bg-secondary/90 text-gray-900' 
+                          : 'bg-gray-200/20 text-gray-600 cursor-not-allowed opacity-50'
+                      }`}
+                    >
+                      <Camera size={20} />
+                      Take Photo
+                    </button>
+                    
+                    <p className="mt-3 text-xs text-gray-600 text-center">
+                      Opens camera on mobile
+                    </p>
+                  </div>
                 )}
               </div>
 
               <button
                 type="submit"
                 disabled={loading || !image || !formData.carCategory}
-                className="w-full mt-6 py-4 cyber-button rounded-lg font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-4 py-3 text-base nature-button rounded-lg font-semibold disabled:opacity-50"
               >
                 {loading ? 'Analyzing...' : 'Analyze Damage →'}
               </button>

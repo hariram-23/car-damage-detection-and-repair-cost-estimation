@@ -55,6 +55,15 @@ const analysisSchema = new mongoose.Schema({
     type: String,  // Changed to String to support range format like "$500 - $750"
     required: true
   },
+  costBreakdown: [{
+    damageType: String,
+    count: Number,
+    avgConfidence: Number,
+    severity: String,
+    costRange: String,
+    minCost: Number,
+    maxCost: Number
+  }],
   modelVersion: {
     type: String
   },

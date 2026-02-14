@@ -46,7 +46,7 @@ export default function ResetPassword() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-dark flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen bg-light-bg flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-96 h-96 bg-primary rounded-full blur-3xl"></div>
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
@@ -57,14 +57,14 @@ export default function ResetPassword() {
           animate={{ opacity: 1, scale: 1 }}
           className="relative z-10 w-full max-w-md mx-4"
         >
-          <div className="cyber-border rounded-2xl p-8 bg-dark-light/50 backdrop-blur text-center">
+          <div className="nature-border rounded-2xl p-8 bg-white/90 backdrop-blur text-center">
             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8 text-green-400">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Password Reset Successful!</h2>
-            <p className="text-gray-400 mb-6">
+            <h2 className="text-2xl font-display font-display font-bold mb-2">Password Reset Successful!</h2>
+            <p className="text-gray-700 mb-6">
               Your password has been reset successfully. Redirecting to login...
             </p>
             <Link to="/login" className="text-primary hover:underline">
@@ -77,7 +77,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-dark flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-light-bg flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-20 w-96 h-96 bg-primary rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
@@ -89,15 +89,15 @@ export default function ResetPassword() {
         className="relative z-10 w-full max-w-md mx-4"
       >
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-2">AI DAMAGE</h1>
-          <p className="text-gray-400">Reset your password</p>
+          <h1 className="text-5xl font-display font-extrabold mb-2">AI DAMAGE</h1>
+          <p className="text-gray-700">Reset your password</p>
         </div>
 
-        <div className="cyber-border rounded-2xl p-8 bg-dark-light/50 backdrop-blur">
+        <div className="nature-border rounded-2xl p-8 bg-white/90 backdrop-blur">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Create New Password</h2>
-              <p className="text-gray-400 text-sm mb-6">Enter your new password below</p>
+              <h2 className="text-2xl font-display font-display font-bold mb-2">Create New Password</h2>
+              <p className="text-gray-700 text-sm mb-6">Enter your new password below</p>
             </div>
 
             {error && (
@@ -113,7 +113,7 @@ export default function ResetPassword() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-dark border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition pr-12"
+                  className="w-full px-4 py-3 bg-light-bg border-2 border-gray-300 rounded-lg focus:border-primary outline-none transition pr-12"
                   required
                   minLength={6}
                   placeholder="Enter new password"
@@ -121,7 +121,7 @@ export default function ResetPassword() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 hover:text-primary transition"
                 >
                   {showPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -145,14 +145,14 @@ export default function ResetPassword() {
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-dark border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition pr-12"
+                  className="w-full px-4 py-3 bg-light-bg border-2 border-gray-300 rounded-lg focus:border-primary outline-none transition pr-12"
                   required
                   placeholder="Confirm new password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 hover:text-primary transition"
                 >
                   {showConfirmPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -171,13 +171,13 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 cyber-button rounded-lg font-semibold text-lg disabled:opacity-50"
+              className="w-full py-4 nature-button rounded-lg font-semibold text-lg disabled:opacity-50"
             >
               {loading ? 'Resetting Password...' : 'Reset Password'}
             </button>
 
             <div className="text-center">
-              <Link to="/login" className="text-sm text-gray-400 hover:text-primary transition">
+              <Link to="/login" className="text-sm text-gray-700 hover:text-primary transition">
                 Back to Login
               </Link>
             </div>
@@ -187,3 +187,7 @@ export default function ResetPassword() {
     </div>
   )
 }
+
+
+
+

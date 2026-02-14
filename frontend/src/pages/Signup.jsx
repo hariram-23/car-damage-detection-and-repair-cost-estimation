@@ -12,31 +12,146 @@ export default function Signup() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  const [passwordStrength, setPasswordStrength] = useState('')
   const { signup } = useAuth()
   const navigate = useNavigate()
 
+  // Email validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email) {
+      return 'Email is required'
+    }
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address (e.g., user@example.com)'
+    }
+    return ''
+  }
+
+  // Password validation with strength check
+  const validatePassword = (password) => {
+    if (!password) {
+      return 'Password is required'
+    }
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters'
+    }
+    if (password.length > 50) {
+      return 'Password must be less than 50 characters'
+    }
+    
+    // Check password strength
+    let strength = 0
+    if (password.length >= 8) strength++
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++
+    if (/\d/.test(password)) strength++
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++
+
+    if (strength === 0 || strength === 1) {
+      setPasswordStrength('Weak')
+    } else if (strength === 2) {
+      setPasswordStrength('Medium')
+    } else {
+      setPasswordStrength('Strong')
+    }
+
+    return ''
+  }
+
+  // Name validation
+  const validateName = (name, fieldName) => {
+    if (!name) {
+      return `${fieldName} is required`
+    }
+    if (name.length < 2) {
+      return `${fieldName} must be at least 2 characters`
+    }
+    if (name.length > 30) {
+      return `${fieldName} must be less than 30 characters`
+    }
+    if (!/^[a-zA-Z\s]+$/.test(name)) {
+      return `${fieldName} can only contain letters`
+    }
+    return ''
+  }
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+    
+    // Clear field error when user types
+    setFieldErrors({ ...fieldErrors, [name]: '' })
+    setError('')
+
+    // Real-time password strength check
+    if (name === 'password') {
+      validatePassword(value)
+    }
+  }
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target
+    let error = ''
+
+    if (name === 'email') {
+      error = validateEmail(value)
+    } else if (name === 'password') {
+      error = validatePassword(value)
+    } else if (name === 'firstName') {
+      error = validateName(value, 'First name')
+    } else if (name === 'lastName') {
+      error = validateName(value, 'Last name')
+    }
+
+    setFieldErrors({ ...fieldErrors, [name]: error })
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setFieldErrors({})
+
+    // Validate all fields
+    const errors = {}
+    errors.firstName = validateName(formData.firstName, 'First name')
+    errors.lastName = validateName(formData.lastName, 'Last name')
+    errors.email = validateEmail(formData.email)
+    errors.password = validatePassword(formData.password)
+
+    // Check if there are any errors
+    const hasErrors = Object.values(errors).some(err => err !== '')
+    if (hasErrors) {
+      setFieldErrors(errors)
+      return
+    }
+
     setLoading(true)
 
     try {
       await signup(formData)
       navigate('/login')
     } catch (err) {
-      setError(err.response?.data?.error || 'Signup failed')
+      setError(err.response?.data?.error || 'Signup failed. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-dark flex items-center justify-center relative overflow-hidden py-12">
+    <div className="min-h-screen bg-light-bg flex items-center justify-center relative overflow-hidden py-12">
+      {/* Back to Home Button */}
+      <Link 
+        to="/" 
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-primary transition group"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 group-hover:text-primary transition">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        <span className="group-hover:text-primary transition">Back to Home</span>
+      </Link>
+
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-20 w-96 h-96 bg-primary rounded-full blur-3xl"></div>
       </div>
@@ -47,22 +162,22 @@ export default function Signup() {
         className="relative z-10 w-full max-w-md mx-4"
       >
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-2">AI DAMAGE</h1>
-          <p className="text-gray-400">Log in to access your dashboard</p>
+          <h1 className="text-5xl font-display font-extrabold mb-2">AI DAMAGE</h1>
+          <p className="text-gray-700">Log in to access your dashboard</p>
         </div>
 
-        <div className="cyber-border rounded-2xl p-8 bg-dark-light/50 backdrop-blur">
+        <div className="nature-border rounded-2xl p-8 bg-white/90 backdrop-blur">
           <div className="flex gap-2 mb-8">
-            <Link to="/login" className="flex-1 py-3 border-2 border-gray-700 rounded-lg hover:border-primary transition text-center">
+            <Link to="/login" className="flex-1 py-3 border-2 border-gray-300 rounded-lg hover:border-primary transition text-center">
               Login
             </Link>
-            <button className="flex-1 py-3 cyber-button rounded-lg font-semibold">Sign Up</button>
+            <button className="flex-1 py-3 nature-button rounded-lg font-semibold">Sign Up</button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Create Account</h2>
-              <p className="text-gray-400 text-sm mb-6">Join thousands of users today</p>
+              <h2 className="text-2xl font-display font-display font-bold mb-2">Create Account</h2>
+              <p className="text-gray-700 text-sm mb-6">Join thousands of users today</p>
             </div>
 
             {error && (
@@ -73,57 +188,82 @@ export default function Signup() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm mb-2">First Name</label>
+                <label className="block text-sm mb-2 font-semibold">First Name</label>
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-dark border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition"
+                  onBlur={handleBlur}
+                  placeholder="John"
+                  className={`w-full px-4 py-3 bg-light-bg border-2 rounded-lg focus:outline-none transition ${
+                    fieldErrors.firstName ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-primary'
+                  }`}
                   required
                 />
+                {fieldErrors.firstName && (
+                  <p className="mt-1 text-xs text-red-500 font-medium">{fieldErrors.firstName}</p>
+                )}
               </div>
               <div>
-                <label className="block text-sm mb-2">Last Name</label>
+                <label className="block text-sm mb-2 font-semibold">Last Name</label>
                 <input
                   type="text"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-dark border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition"
+                  onBlur={handleBlur}
+                  placeholder="Doe"
+                  className={`w-full px-4 py-3 bg-light-bg border-2 rounded-lg focus:outline-none transition ${
+                    fieldErrors.lastName ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-primary'
+                  }`}
                   required
                 />
+                {fieldErrors.lastName && (
+                  <p className="mt-1 text-xs text-red-500 font-medium">{fieldErrors.lastName}</p>
+                )}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Email</label>
+              <label className="block text-sm mb-2 font-semibold">Email</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-dark border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition"
+                onBlur={handleBlur}
+                placeholder="john@example.com"
+                className={`w-full px-4 py-3 bg-light-bg border-2 rounded-lg focus:outline-none transition ${
+                  fieldErrors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-primary'
+                }`}
                 required
               />
+              {fieldErrors.email && (
+                <p className="mt-1 text-sm text-red-500 font-medium">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Password</label>
+              <label className="block text-sm mb-2 font-semibold">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-dark border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition pr-12"
+                  onBlur={handleBlur}
+                  placeholder="At least 6 characters"
+                  className={`w-full px-4 py-3 bg-light-bg border-2 rounded-lg focus:outline-none transition pr-12 ${
+                    fieldErrors.password ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-primary'
+                  }`}
                   required
                   minLength={6}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 hover:text-primary transition"
                 >
                   {showPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -137,12 +277,40 @@ export default function Signup() {
                   )}
                 </button>
               </div>
+              {fieldErrors.password && (
+                <p className="mt-1 text-sm text-red-500 font-medium">{fieldErrors.password}</p>
+              )}
+              {formData.password && !fieldErrors.password && passwordStrength && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all ${
+                          passwordStrength === 'Weak' ? 'w-1/3 bg-red-500' :
+                          passwordStrength === 'Medium' ? 'w-2/3 bg-yellow-500' :
+                          'w-full bg-green-500'
+                        }`}
+                      ></div>
+                    </div>
+                    <span className={`text-xs font-bold ${
+                      passwordStrength === 'Weak' ? 'text-red-500' :
+                      passwordStrength === 'Medium' ? 'text-yellow-600' :
+                      'text-green-600'
+                    }`}>
+                      {passwordStrength}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-600">
+                    💡 Use 8+ characters with uppercase, lowercase, numbers & symbols for a strong password
+                  </p>
+                </div>
+              )}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 cyber-button rounded-lg font-semibold text-lg disabled:opacity-50"
+              className="w-full py-4 nature-button rounded-lg font-semibold text-lg disabled:opacity-50"
             >
               {loading ? 'Creating Account...' : 'Sign Up'}
             </button>
@@ -152,3 +320,7 @@ export default function Signup() {
     </div>
   )
 }
+
+
+
+

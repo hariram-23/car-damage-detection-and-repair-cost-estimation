@@ -35,34 +35,34 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark flex items-center justify-center">
+      <div className="min-h-screen bg-light-bg flex items-center justify-center">
         <div className="text-primary text-2xl">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-dark">
+    <div className="min-h-screen bg-light-bg">
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-light-bg/70 flex items-center justify-center z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="cyber-border rounded-xl p-8 bg-dark max-w-md w-full mx-4"
+            className="nature-border rounded-xl p-8 bg-white max-w-md w-full mx-4"
           >
-            <h3 className="text-2xl font-bold mb-4">Confirm Logout</h3>
-            <p className="text-gray-400 mb-6">Are you sure you want to logout?</p>
+            <h3 className="text-2xl font-display font-display font-bold mb-4 text-gray-900">Confirm Logout</h3>
+            <p className="text-gray-700 mb-6">Are you sure you want to logout?</p>
             <div className="flex gap-4">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 px-6 py-3 border-2 border-gray-700 rounded-lg hover:border-gray-500 transition"
+                className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-lg hover:border-primary transition text-gray-900"
               >
                 Cancel
               </button>
               <button
                 onClick={handleLogout}
-                className="flex-1 px-6 py-3 cyber-button rounded-lg font-semibold"
+                className="flex-1 px-6 py-3 nature-button rounded-lg font-semibold"
               >
                 Logout
               </button>
@@ -72,21 +72,21 @@ export default function Dashboard() {
       )}
 
       {/* Header */}
-      <nav className="border-b border-gray-800 px-8 py-4">
+      <nav className="border-b border-primary/20 px-8 py-4 bg-white/80 backdrop-blur">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded flex items-center justify-center font-bold">AI</div>
-            <span className="text-2xl font-bold">DAMAGESYS</span>
+            <div className="w-10 h-10 bg-primary rounded flex items-center justify-center font-bold text-gray-900">AI</div>
+            <span className="text-2xl font-display font-bold text-gray-900">DAMAGESYS</span>
           </div>
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <div className="text-sm text-gray-400">Premium User</div>
-              <div className="font-semibold">{user?.firstName} {user?.lastName}</div>
+              <div className="text-sm text-gray-600">Premium User</div>
+              <div className="font-semibold text-gray-900">{user?.firstName} {user?.lastName}</div>
             </div>
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center font-bold">
+            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center font-bold text-gray-900">
               {user?.firstName?.[0]}{user?.lastName?.[0]}
             </div>
-            <button onClick={() => setShowLogoutConfirm(true)} className="p-2 hover:text-primary transition">
+            <button onClick={() => setShowLogoutConfirm(true)} className="p-2 hover:text-primary transition text-gray-900">
               <LogOut size={20} />
             </button>
           </div>
@@ -97,66 +97,148 @@ export default function Dashboard() {
         {/* Page Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">DASHBOARD</h1>
-            <p className="text-gray-400">Overview of your damage analysis activity</p>
+            <h1 className="text-4xl font-display font-extrabold mb-2 text-gray-900">DASHBOARD</h1>
+            <p className="text-gray-600">Overview of your damage analysis activity</p>
           </div>
-          <button
-            onClick={() => navigate('/analyze')}
-            className="flex items-center gap-2 px-6 py-3 cyber-button rounded-lg font-semibold"
-          >
-            <Plus size={20} /> New Analysis
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => navigate('/analyze')}
+              className="flex items-center gap-2 px-6 py-3 nature-button rounded-lg font-semibold"
+            >
+              <Plus size={20} /> New Analysis
+            </button>
+            <button
+              onClick={() => navigate('/batch-analyze')}
+              className="flex items-center gap-2 px-6 py-3 border-2 border-primary text-primary rounded-lg font-semibold hover:bg-primary hover:text-gray-900 transition"
+            >
+              Batch Upload
+            </button>
+            <button
+              onClick={() => navigate('/compare-analyze')}
+              className="flex items-center gap-2 px-6 py-3 border-2 border-secondary text-olive rounded-lg font-semibold hover:bg-secondary hover:text-gray-900 transition"
+            >
+              Compare
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {[
-            { icon: TrendingUp, label: 'Total Scans', value: stats?.stats.totalScans || 0, change: '+2 from last week', color: 'text-blue-400' },
-            { icon: IndianRupee, label: 'Avg Repair Cost', value: `₹${(stats?.stats.avgRepairCost || 0).toLocaleString('en-IN')}`, change: '+1.5% from last month', color: 'text-green-400' },
+            { icon: TrendingUp, label: 'Total Scans', value: stats?.stats.totalScans || 0, change: '+2 from last week', color: 'text-secondary' },
+            { icon: IndianRupee, label: 'Avg Repair Cost', value: `₹${(stats?.stats.avgRepairCost || 0).toLocaleString('en-IN')}`, change: '+1.5% from last month', color: 'text-olive' },
             { icon: CheckCircle, label: 'Accuracy Rate', value: `${stats?.stats.accuracyRate || 0}%`, change: 'Based on user feedback', color: 'text-primary' },
-            { icon: Clock, label: 'Pending Reviews', value: stats?.stats.pendingReviews || 0, change: 'Action required', color: 'text-yellow-400' }
+            { icon: Clock, label: 'Pending Reviews', value: stats?.stats.pendingReviews || 0, change: 'Action required', color: 'text-orange-500' }
           ].map((stat, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="cyber-border rounded-xl p-6 bg-dark-light/30"
+              className="nature-border rounded-xl p-6 bg-white/80"
             >
               <div className="flex items-center justify-between mb-4">
                 <stat.icon className={`${stat.color}`} size={24} />
               </div>
-              <div className="text-3xl font-bold mb-1">{stat.value}</div>
-              <div className="text-sm text-gray-400 mb-2">{stat.label}</div>
+              <div className="text-3xl font-display font-bold mb-1 text-gray-900">{stat.value}</div>
+              <div className="text-sm text-gray-700 mb-2">{stat.label}</div>
               <div className="text-xs text-gray-500">{stat.change}</div>
             </motion.div>
           ))}
         </div>
 
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            onClick={() => navigate('/analyze')}
+            className="nature-border rounded-xl p-6 bg-gradient-to-br from-primary/20 to-white cursor-pointer hover:from-primary/30 transition"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
+                <Plus className="text-primary" size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-display font-display font-bold text-gray-900">Single Analysis</h3>
+                <p className="text-sm text-gray-600">Analyze one image</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 font-medium">Upload a single vehicle image for quick damage detection and cost estimation</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            onClick={() => navigate('/batch-analyze')}
+            className="nature-border rounded-xl p-6 bg-gradient-to-br from-secondary/20 to-white cursor-pointer hover:from-secondary/30 transition"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center">
+                <svg className="text-olive" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-display font-display font-bold text-gray-900">Batch Upload</h3>
+                <p className="text-sm text-gray-600">Up to 10 images</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 font-medium">Process multiple vehicle images at once with real-time progress tracking</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            onClick={() => navigate('/compare-analyze')}
+            className="nature-border rounded-xl p-6 bg-gradient-to-br from-olive/20 to-white cursor-pointer hover:from-olive/30 transition"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-olive/20 rounded-lg flex items-center justify-center">
+                <svg className="text-olive" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="18" />
+                  <rect x="14" y="3" width="7" height="18" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-display font-display font-bold text-gray-900">Compare Images</h3>
+                <p className="text-sm text-gray-600">Side-by-side analysis</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 font-medium">Compare two vehicle images to see damage differences and cost variations</p>
+          </motion.div>
+        </div>
+
         {/* Charts and Recent Analysis */}
         <div className="grid md:grid-cols-3 gap-6">
           {/* Cost Trends Chart */}
-          <div className="md:col-span-2 cyber-border rounded-xl p-6 bg-dark-light/30">
-            <h2 className="text-xl font-bold mb-6">Cost Estimation Trends (INR)</h2>
+          <div className="md:col-span-2 nature-border rounded-xl p-6 bg-white/80">
+            <h2 className="text-xl font-display font-display font-bold mb-6 text-gray-900">Cost Estimation Trends (INR)</h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={stats?.costTrends || []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                <XAxis dataKey="day" stroke="#666" />
-                <YAxis stroke="#666" tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
+                <XAxis dataKey="day" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#1a1f3a', border: '1px solid #00d9ff' }}
-                  labelStyle={{ color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#ffffff', border: '2px solid #16A34A', borderRadius: '8px' }}
+                  labelStyle={{ color: '#111827' }}
                   formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Avg Cost']}
                 />
-                <Line type="monotone" dataKey="cost" stroke="#00d9ff" strokeWidth={3} dot={{ fill: '#00d9ff', r: 5 }} />
+                <Line type="monotone" dataKey="cost" stroke="#16A34A" strokeWidth={3} dot={{ fill: '#16A34A', r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
           {/* Recent Analysis */}
-          <div className="cyber-border rounded-xl p-6 bg-dark-light/30">
+          <div className="nature-border rounded-xl p-6 bg-white/80">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Recent Analysis</h2>
+              <h2 className="text-xl font-display font-display font-bold text-gray-900">Recent Analysis</h2>
               <button onClick={() => navigate('/history')} className="text-primary text-sm hover:underline">
                 View All History
               </button>
@@ -166,9 +248,9 @@ export default function Dashboard() {
                 <div
                   key={i}
                   onClick={() => navigate(`/report/${analysis.reportId}`)}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-dark/50 cursor-pointer transition"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 cursor-pointer transition"
                 >
-                  <div className="w-12 h-12 bg-gray-700 rounded overflow-hidden flex-shrink-0">
+                  <div className="w-12 h-12 bg-gray-200 rounded overflow-hidden flex-shrink-0">
                     {analysis.imageUrl ? (
                       <img 
                         src={`http://localhost:5000${analysis.imageUrl}`} 
@@ -176,7 +258,7 @@ export default function Dashboard() {
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="48" height="48"%3E%3Crect fill="%23374151" width="48" height="48"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239CA3AF" font-family="Arial" font-size="10"%3ENo Image%3C/text%3E%3C/svg%3E';
+                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="48" height="48"%3E%3Crect fill="%23E5E7EB" width="48" height="48"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%236B7280" font-family="Arial" font-size="10"%3ENo Image%3C/text%3E%3C/svg%3E';
                         }}
                       />
                     ) : (
@@ -186,8 +268,8 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-sm">{analysis.vehicleName || 'Unknown Vehicle'}</div>
-                    <div className="text-xs text-gray-400">{analysis.damageType}</div>
+                    <div className="font-semibold text-sm text-gray-900">{analysis.vehicleName || 'Unknown Vehicle'}</div>
+                    <div className="text-xs text-gray-600">{analysis.damageType}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-primary font-bold">₹{analysis.cost}</div>
@@ -202,3 +284,7 @@ export default function Dashboard() {
     </div>
   )
 }
+
+
+
+

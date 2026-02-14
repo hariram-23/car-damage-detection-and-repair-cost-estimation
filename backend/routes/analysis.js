@@ -8,7 +8,7 @@ const authMiddleware = require('../middleware/auth');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
-const { calculateEstimatedCost } = require('../utils/costCalculator');
+const { calculateEstimatedCost, calculateMultipleDamageCosts } = require('../utils/costCalculator');
 
 const router = express.Router();
 
@@ -140,23 +140,38 @@ router.post('/analyze', authMiddleware, upload.single('image'), handleMulterErro
       console.error('-'.repeat(80));
       console.error(mlError);
       console.error('='.repeat(80) + '\n');
+      
+      // Check if it's a vehicle detection error
+      const errorMessage = mlError.message || '';
+      if (errorMessage.includes('No vehicle detected') || errorMessage.includes('Please upload a car image')) {
+        return res.status(400).json({ 
+          error: 'Please upload a car image. No vehicle detected in the uploaded image.',
+          details: 'The image must contain a vehicle (car, motorcycle, bus, or truck) for damage analysis.'
+        });
+      }
+      
       return res.status(503).json({ 
         error: 'Please upload the image properly',
         details: 'Unable to process the image. Please ensure the image is clear and shows vehicle damage.'
       });
     }
 
-    // Calculate estimated cost
-    const estimatedCost = calculateEstimatedCost(
-      damageResult.damageType,
-      damageResult.severity,
+    // Calculate estimated cost for all damages
+    const costCalculation = calculateMultipleDamageCosts(
+      damageResult.detections,
       carCategory || 'Medium'
     );
 
     console.log('\n💰 COST ESTIMATION:');
     console.log('-'.repeat(80));
-    console.log(`💵 Estimated Cost: ₹${estimatedCost}`);
-    console.log(`📊 Based on: ${damageResult.severity} severity + ${carCategory || 'Medium'} category`);
+    console.log(`💵 Total Estimated Cost: ${costCalculation.totalCostRange}`);
+    console.log(`📊 Unique Damage Types: ${costCalculation.uniqueDamageTypes}`);
+    console.log('\n📋 Cost Breakdown:');
+    costCalculation.damageBreakdown.forEach((damage, idx) => {
+      console.log(`   ${idx + 1}. ${damage.damageType} (${damage.count}x) - ${damage.severity}`);
+      console.log(`      Cost: ${damage.costRange}`);
+      console.log(`      Avg Confidence: ${damage.avgConfidence}%`);
+    });
     console.log('-'.repeat(80));
 
     // Determine if analysis needs review based on confidence
@@ -178,7 +193,8 @@ router.post('/analyze', authMiddleware, upload.single('image'), handleMulterErro
       },
       detections: damageResult.detections,
       totalDetections: damageResult.totalDetections,
-      estimatedCost,
+      estimatedCost: costCalculation.totalCostRange,
+      costBreakdown: costCalculation.damageBreakdown,
       status,
       needsReview
     });
@@ -200,6 +216,7 @@ router.post('/analyze', authMiddleware, upload.single('image'), handleMulterErro
         confidence: analysis.damageDetection.confidence,
         affectedArea: analysis.damageDetection.affectedArea,
         estimatedCost: analysis.estimatedCost,
+        costBreakdown: analysis.costBreakdown,
         imageUrl: analysis.imageUrl,
         carCategory: analysis.vehicleDetails.carCategory,
         modelVersion: analysis.modelVersion,

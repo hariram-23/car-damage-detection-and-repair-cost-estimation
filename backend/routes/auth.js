@@ -81,11 +81,24 @@ router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
 
-    // Find user
+    // Validate email format
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ 
+        error: 'Please provide a valid email address',
+        registered: false
+      });
+    }
+
+    // Find user - EXPLICITLY check if user exists
     const user = await User.findOne({ email });
+    
     if (!user) {
-      // Don't reveal if user exists or not for security
-      return res.json({ message: 'If an account exists with this email, you will receive an OTP.' });
+      // Return clear error message that user is not registered
+      return res.status(404).json({ 
+        error: 'This email is not registered. Please sign up first.',
+        registered: false,
+        suggestion: 'Create a new account to get started'
+      });
     }
 
     // Generate 6-digit OTP
@@ -96,13 +109,23 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordOTPExpires = Date.now() + 600000; // 10 minutes
     await user.save();
 
+    console.log('\n' + '='.repeat(80));
+    console.log('📧 FORGOT PASSWORD - OTP GENERATION');
+    console.log('='.repeat(80));
+    console.log(`Email: ${email}`);
+    console.log(`User: ${user.firstName} ${user.lastName}`);
+    console.log(`OTP: ${otp}`);
+    console.log(`Expires: ${new Date(user.resetPasswordOTPExpires).toLocaleString()}`);
+    console.log('='.repeat(80) + '\n');
+
     // Send OTP email
     try {
       await sendOTPEmail(user.email, otp, `${user.firstName} ${user.lastName}`);
       
       res.json({ 
-        message: 'OTP has been sent to your email.',
-        success: true
+        message: 'OTP has been sent to your email. Please check your inbox.',
+        success: true,
+        registered: true
       });
     } catch (emailError) {
       console.error('Email sending failed:', emailError.message);
@@ -112,16 +135,19 @@ router.post('/forgot-password', async (req, res) => {
         res.json({ 
           message: 'Email service unavailable. OTP shown for development.',
           success: true,
+          registered: true,
           otp: otp // Only for development
         });
       } else {
         res.status(500).json({ 
-          error: 'Failed to send OTP. Please try again later.' 
+          error: 'Failed to send OTP. Please try again later.',
+          registered: true
         });
       }
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 });
 

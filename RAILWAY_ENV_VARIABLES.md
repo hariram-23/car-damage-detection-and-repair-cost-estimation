@@ -30,12 +30,12 @@ production
 
 ### 5. EMAIL_USER
 ```
-hari211415@gmail.com
+aicardamagedetection@gmail.com
 ```
 
 ### 6. EMAIL_PASSWORD
 ```
-kpkdekssubkykbtv
+uzezehjeuiitdzsl
 ```
 
 ### 7. FRONTEND_URL (Update after deploying frontend)

@@ -5,6 +5,8 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
 import Analyze from './pages/Analyze'
+import BatchAnalyze from './pages/BatchAnalyze'
+import CompareAnalyze from './pages/CompareAnalyze'
 import Report from './pages/Report'
 import History from './pages/History'
 import ResetPassword from './pages/ResetPassword'
@@ -25,6 +27,8 @@ function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/analyze" element={<ProtectedRoute><Analyze /></ProtectedRoute>} />
+          <Route path="/batch-analyze" element={<ProtectedRoute><BatchAnalyze /></ProtectedRoute>} />
+          <Route path="/compare-analyze" element={<ProtectedRoute><CompareAnalyze /></ProtectedRoute>} />
           <Route path="/report/:reportId" element={<ProtectedRoute><Report /></ProtectedRoute>} />
           <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
         </Routes>
@@ -34,3 +38,6 @@ function App() {
 }
 
 export default App
+
+
+

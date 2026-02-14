@@ -9,6 +9,8 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [showOTPVerification, setShowOTPVerification] = useState(false)
@@ -24,16 +26,124 @@ export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
+  // Email validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email) {
+      return 'Email is required'
+    }
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address'
+    }
+    return ''
+  }
+
+  // Password validation
+  const validatePassword = (password) => {
+    if (!password) {
+      return 'Password is required'
+    }
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters'
+    }
+    if (password.length > 50) {
+      return 'Password must be less than 50 characters'
+    }
+    return ''
+  }
+
+  // Handle email change with validation
+  const handleEmailChange = (e) => {
+    const value = e.target.value
+    setEmail(value)
+    setEmailError('')
+    setError('')
+  }
+
+  // Handle email blur (when user leaves the field)
+  const handleEmailBlur = () => {
+    const error = validateEmail(email)
+    setEmailError(error)
+  }
+
+  // Handle password change with validation
+  const handlePasswordChange = (e) => {
+    const value = e.target.value
+    setPassword(value)
+    setPasswordError('')
+    setError('')
+  }
+
+  // Handle password blur
+  const handlePasswordBlur = () => {
+    const error = validatePassword(password)
+    setPasswordError(error)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setEmailError('')
+    setPasswordError('')
+
+    // Validate all fields
+    const emailErr = validateEmail(email)
+    const passwordErr = validatePassword(password)
+
+    if (emailErr || passwordErr) {
+      setEmailError(emailErr)
+      setPasswordError(passwordErr)
+      return
+    }
+
     setLoading(true)
 
     try {
       await login(email, password)
       navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed')
+      setError(err.response?.data?.error || 'Invalid email or password')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleForgotPasswordClick = async () => {
+    // Validate email first
+    const emailValidation = validateEmail(email)
+    if (emailValidation) {
+      setError(emailValidation)
+      setEmailError(emailValidation)
+      return
+    }
+
+    setError('')
+    setEmailError('')
+    setLoading(true)
+
+    try {
+      const response = await axios.post('/api/auth/forgot-password', { email })
+      
+      // Check if user is registered
+      if (response.data.registered === false) {
+        setError(response.data.error || 'This email is not registered')
+        setLoading(false)
+        return
+      }
+
+      // User exists, proceed with OTP
+      setResetEmail(email)
+      setShowForgotPassword(true)
+      setShowOTPVerification(true)
+      setResetMessage(response.data.message || 'OTP has been sent to your email. Please check your inbox.')
+    } catch (err) {
+      // Handle error response
+      if (err.response?.status === 404) {
+        // User not found
+        setError(err.response.data.error || 'This email is not registered. Please sign up first.')
+      } else {
+        setError(err.response?.data?.error || 'Failed to send OTP. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -112,7 +222,18 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-dark flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-light-bg flex items-center justify-center relative overflow-hidden">
+      {/* Back to Home Button */}
+      <Link 
+        to="/" 
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-primary transition group"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 group-hover:text-primary transition">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        <span className="group-hover:text-primary transition">Back to Home</span>
+      </Link>
+
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-20 w-96 h-96 bg-primary rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
@@ -120,70 +241,16 @@ export default function Login() {
 
       {/* Forgot Password Modal */}
       {showForgotPassword && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-dark/70 flex items-center justify-center z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="cyber-border rounded-2xl p-8 bg-dark max-w-md w-full mx-4"
+            className="nature-border rounded-2xl p-8 bg-light-bg max-w-md w-full mx-4"
           >
-            {!showOTPVerification && !showNewPassword && (
-              <>
-                <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
-                <p className="text-gray-400 mb-6">
-                  Enter your email address and we'll send you an OTP to reset your password.
-                </p>
-
-                {resetMessage && (
-                  <div className={`rounded-lg p-3 mb-4 text-sm ${
-                    resetMessage.includes('sent') || resetMessage.includes('successful')
-                      ? 'bg-green-500/20 border border-green-500 text-green-400'
-                      : 'bg-red-500/20 border border-red-500 text-red-400'
-                  }`}>
-                    {resetMessage}
-                  </div>
-                )}
-
-                <form onSubmit={handleForgotPassword} className="space-y-4">
-                  <div>
-                    <label className="block text-sm mb-2">Email Address</label>
-                    <input
-                      type="email"
-                      value={resetEmail}
-                      onChange={(e) => setResetEmail(e.target.value)}
-                      placeholder="john@example.com"
-                      className="w-full px-4 py-3 bg-dark-light border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowForgotPassword(false)
-                        setResetEmail('')
-                        setResetMessage('')
-                      }}
-                      className="flex-1 px-6 py-3 border-2 border-gray-700 rounded-lg hover:border-gray-500 transition"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={resetLoading}
-                      className="flex-1 px-6 py-3 cyber-button rounded-lg font-semibold disabled:opacity-50"
-                    >
-                      {resetLoading ? 'Sending...' : 'Send OTP'}
-                    </button>
-                  </div>
-                </form>
-              </>
-            )}
-
             {showOTPVerification && !showNewPassword && (
               <>
-                <h2 className="text-2xl font-bold mb-4">Enter OTP</h2>
-                <p className="text-gray-400 mb-6">
+                <h2 className="text-2xl font-display font-display font-bold mb-4">Enter OTP</h2>
+                <p className="text-gray-700 mb-6">
                   We've sent a 6-digit OTP to {resetEmail}. Please check your email.
                 </p>
 
@@ -205,9 +272,10 @@ export default function Login() {
                       value={otp}
                       onChange={(e) => setOTP(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       placeholder="000000"
-                      className="w-full px-4 py-3 bg-dark-light border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition text-center text-2xl tracking-widest font-mono"
+                      className="w-full px-4 py-3 bg-white/80 border-2 border-gray-300 rounded-lg focus:border-primary outline-none transition text-center text-2xl tracking-widest font-mono"
                       required
                       maxLength={6}
+                      autoFocus
                     />
                   </div>
 
@@ -215,18 +283,19 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => {
+                        setShowForgotPassword(false)
                         setShowOTPVerification(false)
                         setOTP('')
                         setResetMessage('')
                       }}
-                      className="flex-1 px-6 py-3 border-2 border-gray-700 rounded-lg hover:border-gray-500 transition"
+                      className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-lg hover:border-gray-500 transition"
                     >
-                      Back
+                      Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={resetLoading || otp.length !== 6}
-                      className="flex-1 px-6 py-3 cyber-button rounded-lg font-semibold disabled:opacity-50"
+                      className="flex-1 px-6 py-3 nature-button rounded-lg font-semibold disabled:opacity-50"
                     >
                       {resetLoading ? 'Verifying...' : 'Verify OTP'}
                     </button>
@@ -237,8 +306,8 @@ export default function Login() {
 
             {showNewPassword && (
               <>
-                <h2 className="text-2xl font-bold mb-4">Set New Password</h2>
-                <p className="text-gray-400 mb-6">
+                <h2 className="text-2xl font-display font-display font-bold mb-4">Set New Password</h2>
+                <p className="text-gray-700 mb-6">
                   Enter your new password below.
                 </p>
 
@@ -260,7 +329,7 @@ export default function Login() {
                         type={showNewPasswordField ? "text" : "password"}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full px-4 py-3 bg-dark-light border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition pr-12"
+                        className="w-full px-4 py-3 bg-white/80 border-2 border-gray-300 rounded-lg focus:border-primary outline-none transition pr-12"
                         required
                         minLength={6}
                         placeholder="Enter new password"
@@ -268,7 +337,7 @@ export default function Login() {
                       <button
                         type="button"
                         onClick={() => setShowNewPasswordField(!showNewPasswordField)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 hover:text-primary transition"
                       >
                         {showNewPasswordField ? (
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -291,14 +360,14 @@ export default function Login() {
                         type={showConfirmPasswordField ? "text" : "password"}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-4 py-3 bg-dark-light border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition pr-12"
+                        className="w-full px-4 py-3 bg-white/80 border-2 border-gray-300 rounded-lg focus:border-primary outline-none transition pr-12"
                         required
                         placeholder="Confirm new password"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPasswordField(!showConfirmPasswordField)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 hover:text-primary transition"
                       >
                         {showConfirmPasswordField ? (
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -317,7 +386,7 @@ export default function Login() {
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    className="w-full px-6 py-3 cyber-button rounded-lg font-semibold disabled:opacity-50"
+                    className="w-full px-6 py-3 nature-button rounded-lg font-semibold disabled:opacity-50"
                   >
                     {resetLoading ? 'Resetting...' : 'Reset Password'}
                   </button>
@@ -334,49 +403,67 @@ export default function Login() {
         className="relative z-10 w-full max-w-md mx-4"
       >
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-2">AI DAMAGE</h1>
-          <p className="text-gray-400">Log in to access your dashboard</p>
+          <h1 className="text-5xl font-display font-extrabold mb-2">AI DAMAGE</h1>
+          <p className="text-gray-700">Log in to access your dashboard</p>
         </div>
 
-        <div className="cyber-border rounded-2xl p-8 bg-dark-light/50 backdrop-blur">
+        <div className="nature-border rounded-2xl p-8 bg-white/90 backdrop-blur">
           <div className="flex gap-2 mb-8">
-            <button className="flex-1 py-3 cyber-button rounded-lg font-semibold">Login</button>
-            <Link to="/signup" className="flex-1 py-3 border-2 border-gray-700 rounded-lg hover:border-primary transition text-center">
+            <button className="flex-1 py-3 nature-button rounded-lg font-semibold">Login</button>
+            <Link to="/signup" className="flex-1 py-3 border-2 border-gray-300 rounded-lg hover:border-primary transition text-center">
               Sign Up
             </Link>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Welcome Back</h2>
-              <p className="text-gray-400 text-sm mb-6">Enter your credentials to continue</p>
+              <h2 className="text-2xl font-display font-display font-bold mb-2">Welcome Back</h2>
+              <p className="text-gray-700 text-sm mb-6">Enter your credentials to continue</p>
             </div>
 
             {error && (
-              <div className="bg-red-500/20 border border-red-500 rounded-lg p-3 text-red-400 text-sm">
-                {error}
+              <div className="bg-red-500/20 border-2 border-red-500 rounded-lg p-4">
+                <p className="text-red-600 font-semibold mb-2">{error}</p>
+                {error.includes('not registered') && (
+                  <div className="mt-3 pt-3 border-t border-red-300">
+                    <p className="text-sm text-gray-700 mb-2">Don't have an account?</p>
+                    <Link 
+                      to="/signup" 
+                      className="inline-block px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-semibold text-sm"
+                    >
+                      Sign Up Now →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 
             <div>
-              <label className="block text-sm mb-2">Email</label>
+              <label className="block text-sm mb-2 font-semibold">Email</label>
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
                 placeholder="john@example.com"
-                className="w-full px-4 py-3 bg-dark border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition"
+                className={`w-full px-4 py-3 bg-light-bg border-2 rounded-lg focus:outline-none transition ${
+                  emailError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-primary'
+                }`}
                 required
               />
+              {emailError && (
+                <p className="mt-1 text-sm text-red-500 font-medium">{emailError}</p>
+              )}
             </div>
 
             <div>
               <div className="flex justify-between mb-2">
-                <label className="text-sm">Password</label>
+                <label className="text-sm font-semibold">Password</label>
                 <button 
                   type="button"
-                  onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-primary hover:underline"
+                  onClick={handleForgotPasswordClick}
+                  disabled={loading}
+                  className="text-sm text-primary hover:underline disabled:opacity-50 font-medium"
                 >
                   Forgot password?
                 </button>
@@ -385,14 +472,18 @@ export default function Login() {
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-dark border-2 border-gray-700 rounded-lg focus:border-primary outline-none transition pr-12"
+                  onChange={handlePasswordChange}
+                  onBlur={handlePasswordBlur}
+                  placeholder="Enter your password"
+                  className={`w-full px-4 py-3 bg-light-bg border-2 rounded-lg focus:outline-none transition pr-12 ${
+                    passwordError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-primary'
+                  }`}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 hover:text-primary transition"
                 >
                   {showPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -406,12 +497,15 @@ export default function Login() {
                   )}
                 </button>
               </div>
+              {passwordError && (
+                <p className="mt-1 text-sm text-red-500 font-medium">{passwordError}</p>
+              )}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 cyber-button rounded-lg font-semibold text-lg disabled:opacity-50"
+              className="w-full py-4 nature-button rounded-lg font-semibold text-lg disabled:opacity-50"
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
@@ -421,3 +515,7 @@ export default function Login() {
     </div>
   )
 }
+
+
+
+
